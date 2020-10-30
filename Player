@@ -1,0 +1,73 @@
+import com.bignerdranch.nyethack.Coordinate
+import com.bignerdranch.nyethack.Fightable
+import java.io.File
+class Player (_name: String,
+              override var healthPoints: Int = 100,
+              var isBlessed: Boolean = false,
+              private var isImmortal: Boolean) : Fightable {
+    override val diceCount: Int = 3
+    override val diceSides: Int = 6
+    override fun attack(opponent: Fightable): Int {
+        val damageDealt = if (isBlessed) {
+            damageRoll * 2
+        } else {
+            damageRoll
+        }
+        opponent.healthPoints -= damageDealt
+        return damageDealt
+    }
+
+    var name = _name
+    get() = "${field.capitalize()} of $homeTown"
+    private set(value) {
+        field = value.trim()
+    }
+    val homeTown by lazy {selectHomeTown()}
+    var currentPosition = Coordinate(0,0)
+    init {
+        require(healthPoints > 0, { "healthPoints must be greater than zero." })
+        require(name.isNotBlank(), { "Player must have a name." })
+    }class Sword(_name: String) {
+        var name = _name
+            get() = "The Legendary $field"
+            set(value) {
+                field = value.toLowerCase().reversed().capitalize()
+            }
+    }
+    constructor(name: String) : this(
+        name,
+        isImmortal = false,
+        ifBlessed = true
+    ){if (name.toLowerCase() == "kar") healthPoints = 40}
+    private fun selectHomeTown() = File("data/towns.txt")
+            .readText()
+            .split("\n")
+            .shuffled()
+            .first()
+
+    fun auraColor(): String {
+        val auraVisible = ifBlessed && healthPoints >= 50 || isImmortal
+        val auraColor = if (auraVisible) {
+            "GREEN"
+        } else {
+            "NONE"
+        }
+        return auraColor
+    }
+
+    fun formatHealthStatus() =
+        when (healthPoints) {
+            100 -> " is in excellent condition"
+            in 90..99 -> " has a few scratches."
+            in 75..89 -> if (ifBlessed) {
+                "has some minor wounds but is healing quite quickly!"
+            } else {
+                " has some minor wounds."
+            }
+            in 15..74 -> " looks pretty hurt."
+            else -> " is in awful condition"
+        }
+    fun castFirebol( nameFireballs : Int = 2 ) =
+        println("A glass of Fireball springs into existence. *($nameFireballs)")
+
+}
